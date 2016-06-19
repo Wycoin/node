@@ -1,0 +1,5 @@
+#!/bin/bash
+
+docker build -t wycoin/ssh  -f ssh.Dockerfile   .
+docker build -t wycoin/http -f http.Dockerfile  .
+#docker build -t wycoin/data -f data.Dockerfile  .

@@ -1,0 +1,121 @@
+package xMain
+//go full ham on go,  all in http request
+import (
+    "fmt"
+    "os"
+    "bufio"
+    "github.com/gin-gonic/gin"
+    "net/http"
+    "net"
+    "encoding/json"
+    "io/ioutil"
+)
+
+type Node struct {
+    Nodes []string `json:"nodes"`
+}
+
+func main() {
+    register()
+    fmt.Print("who")
+    app := gin.Default()
+
+    v1 := app.Group("/n")
+    {
+        v1.GET("", func(c *gin.Context){
+            c.JSON(200, "sample")
+        })
+    }
+
+    app.POST("transaction", func(c *gin.Context){
+
+        c.JSON(200, "{sample:sample}")
+    })
+
+
+    nodes,_ := readLines("/var/lib/data/nodes.wy")
+    fmt.Print(nodes)
+    transactions,_ := readLines("/var/lib/data/transactions.wy")
+    fmt.Print(transactions)
+
+
+    app.Run(":"+os.Getenv("PORT"))
+}
+
+
+func buildNodeList() []string{
+    data,_ := readLines("/var/lib/data/nodes.wy")
+    return data
+}
+
+func writeEntry(){
+
+}
+
+func addnewNode(){
+
+}
+
+func register(){
+//    nodes,_ := readLines('/var/lib/data/nodes.wy')
+    init_node := "http://init_note:2340"
+    ip := GetLocalIP()
+    response,_ := http.Get(init_node+"/reg/"+ip+":"+os.Getenv("PORT"))
+
+    res := Node{}
+    body,_ := ioutil.ReadAll(response.Body)
+    val := json.Unmarshal([]byte(body), &res)
+//    writeLines(val.Nodes, "/var/lib/data/nodes.wy")
+    fmt.Print(val)
+
+}
+
+func getUserData(){
+
+}
+
+func writeLines(lines []string, path string) error {
+  file, err := os.Create(path)
+  if err != nil {
+    return err
+  }
+  defer file.Close()
+
+  w := bufio.NewWriter(file)
+  for _, line := range lines {
+    fmt.Fprintln(w, line)
+  }
+  return w.Flush()
+}
+
+func readLines(path string) ([]string, error) {
+  file, err := os.Open(path)
+  if err != nil {
+    return nil, err
+  }
+  defer file.Close()
+
+  var lines []string
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    lines = append(lines, scanner.Text())
+  }
+  return lines, scanner.Err()
+}
+
+func GetLocalIP() string {
+    addrs, err := net.InterfaceAddrs()
+    if err != nil {
+        return ""
+    }
+    for _, address := range addrs {
+        // check the address type and if it is not a loopback the display it
+        if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+            if ipnet.IP.To4() != nil {
+                return ipnet.IP.String()
+            }
+        }
+    }
+    return ""
+}
+

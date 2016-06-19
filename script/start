@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# boot up a data container
+docker create --name $1_wycoin_data --volume /var/lib/data alpine:3.4 /bin/echo test
+
+# kick of a init node, just to be sure the test suite is going alright
+docker create --name init_node_wycoin_data --volume /var/lib/data alpine:3.4 /bin/echo test
+docker run -d --name init_node --volumes-from $1_wycoin_data -e PORT=2340 -p 2340:2340 wycoin/http
+
+#generateport
+PORT=$RANDOM
+
+# boot up the service containers
+#docker run -d --name $1_wycoin_ssh --link init_node:init_node --volumes-from $1_wycoin_data  wycoin/ssh
+docker run -d -e LOGGER='https://wycoin-insight.herokuapp.com/events' --name $1_wycoin_http --link init_node:init_node --volumes-from $1_wycoin_data -e PORT=$PORT -p $PORT:$PORT wycoin/http
